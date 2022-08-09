@@ -1,0 +1,23 @@
+.logo {
+    height: 50px
+}
+
+.profile {
+    color: #3c4257;
+
+}
+
+.faIcon {
+    font-size: 25px;
+    cursor: pointer;
+    margin-left: 20px;
+    color: #3c4257;
+}
+
+.header {
+    color: #3c4257;
+    padding: 20px;
+    margin-top: 20px;
+    margin-bottom: 50px;
+    line-height: 50px;
+}
