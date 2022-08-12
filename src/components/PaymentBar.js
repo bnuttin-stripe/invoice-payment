@@ -20,25 +20,28 @@ import Visa from '../img/pms/visa.png';
 import '../styles/pms.css';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner, faTimes, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faSpinner, faTimes, faPlus, faCircleCheck, faDollarSign } from '@fortawesome/free-solid-svg-icons';
 
 export default function PaymentBar(props) {
     // Data
     const [isLoaded, setIsLoaded] = useState(false);
-    const [pms, setPms] = useState([]);
+    const [pms, setPms] = useState([{ id: 'new' }]);
     const [selectedPM, setSelectedPM] = useState();
+    const [newlyCreatedPM, setNewlyCreatedPM] = useState();
     const [refresh, setRefresh] = useState();
+    const [paymentProcessing, setPaymentProcessing] = useState(false);
+    const [paymentIntent, setPaymentIntent] = useState({});
 
     // Modal
     const [show, setShow] = useState(false);
     const hideModal = () => {
         setShow(false);
-        //setRefresh(Math.random());
     }
     const showModal = () => setShow(true);
 
     // Retrieve saved credit cards
     useEffect(() => {
+        setPaymentIntent({});
         setIsLoaded(false);
         fetch('/payment-methods/' + props.customer + '/cards')
             .then(res => res.json())
@@ -51,8 +54,20 @@ export default function PaymentBar(props) {
             });
     }, [refresh]);
 
+    // If a PM was just created, we select it by default
+    useEffect(() => {
+        setSelectedPM(pms.find(x => x.id === newlyCreatedPM));
+    }, [pms, newlyCreatedPM]);
+
+    // Action when customer has selected a card
     const handlePMChange = (e) => {
-        e.id === 'new' ? showModal() : setSelectedPM(e);
+        if (e.id === 'new') {
+            setSelectedPM(null);
+            showModal()
+        }
+        else {
+            setSelectedPM(e);
+        }
     }
 
     // Stripe
@@ -85,16 +100,62 @@ export default function PaymentBar(props) {
         }
     }, [show]);
 
+    const sleeper = (ms) => {
+        return function (x) {
+            return new Promise(resolve => setTimeout(() => resolve(x), ms));
+        };
+    }
+
+
+    const pay = () => {
+        setPaymentProcessing(true);
+        fetch('/payment-intents', {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                customer: props.customer,
+                pm: selectedPM.id,
+                amount: props.total,
+                metadata: { invoices: props.metadata.join(', ') }
+            })
+        })
+            .then(res => res.json())
+            .then(data => {
+                setPaymentIntent(data);
+                setPaymentProcessing(false);
+            })
+    }
+
+    const resetAndRefresh = () => {
+        setPaymentIntent({});
+        props.setRefreshInvoices(Math.random())
+    }
+
     return (
         <>
             <div className="row mb-3">
                 <div className="col d-flex flex-row-reverse mr-5">
-                    <button className="btn btn-primary" disabled={props.total == 0 || selectedPM?.id === '' || selectedPM?.id === 'new'}>
-                        Pay {Utils.displayPrice(props.total, 'usd')}
-                    </button>
-                    
-                    {isLoaded && <Select
-                        placeholder="Select card"
+                    {paymentIntent?.status !== 'succeeded' && 
+                    <button className="btn btn-primary" disabled={isLoaded && (props.total == 0 || selectedPM?.id === undefined || selectedPM?.id === 'new')} onClick={pay}>
+                        {paymentProcessing && <FontAwesomeIcon icon={faSpinner} className="spinner"/>}
+                        {!paymentProcessing && <FontAwesomeIcon icon={faDollarSign} />}
+                        <span style={{paddingLeft:10}}>Pay {Utils.displayPrice(props.total, 'usd')}</span>
+                    </button>}
+
+                    {paymentIntent?.status === 'succeeded' &&
+                        <>
+                            <button className="btn btn-secondary" onClick={resetAndRefresh}>
+                                <FontAwesomeIcon icon={faCircleCheck} />
+                                <span style={{paddingLeft:10}}>Payment Successful</span>
+                            </button>
+                        </>
+                    }
+
+                    {paymentIntent?.status !== 'succeeded' && <Select
+                        placeholder={!isLoaded ? "Retrieving saved cards..." : "Select card"}
+                        isDisabled={!isLoaded}
                         className='pm-select'
                         value={selectedPM}
                         onChange={handlePMChange}
@@ -118,7 +179,7 @@ export default function PaymentBar(props) {
                             if (pm.id == 'new') {
                                 return (
                                     <div >
-                                        <FontAwesomeIcon icon={faPlus} style={{paddingLeft:5, paddingRight:5}}/>
+                                        <FontAwesomeIcon icon={faPlus} style={{ paddingLeft: 5, paddingRight: 5 }} />
                                         <span style={{ paddingLeft: 24 }}>Add a card</span>
                                     </div>
                                 )
@@ -128,6 +189,8 @@ export default function PaymentBar(props) {
                     />}
 
 
+
+                    {!isLoaded && <FontAwesomeIcon icon={faSpinner} className="spinner" style={{ padding: 10 }} />}
                 </div>
             </div>
 
@@ -139,7 +202,7 @@ export default function PaymentBar(props) {
                 <Modal.Body>
                     {elementOptions.clientSecret &&
                         <Elements stripe={stripePromise} options={elementOptions} >
-                            <SetupWrapper return_url={process.env.REACT_APP_BASE_URL} setRefresh={setRefresh} hideModal={hideModal} />
+                            <SetupWrapper return_url={process.env.REACT_APP_BASE_URL} setNewlyCreatedPM={setNewlyCreatedPM} setRefresh={setRefresh} hideModal={hideModal} />
                         </Elements>
                     }
                     <TestCards />

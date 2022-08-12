@@ -6,9 +6,11 @@ export default function SetupWrapper(props) {
     const stripe = useStripe();
     const elements = useElements();
     const [processing, setProcessing] = useState(false);
+    const [error, setError] = useState(false);
 
     const handleSubmit = async () => {
         setProcessing(true);
+        setError(false);
         const { setupIntent, error } = await stripe.confirmSetup({
             elements,
             confirmParams: {
@@ -17,10 +19,12 @@ export default function SetupWrapper(props) {
             redirect: 'if_required'
         });
         
+        setProcessing(false);
+
         if (error) {
-            console.log(error);
+            setError(error.message);
         } else {
-            setProcessing(false);
+            props.setNewlyCreatedPM(setupIntent?.payment_method);
             props.hideModal();
             props.setRefresh(Math.random());
         }
@@ -29,9 +33,11 @@ export default function SetupWrapper(props) {
     return (
         <div>
             <PaymentElement />
+            {error && <div className="error mt-2">{error}</div>}
             <button className="btn btn-primary" disabled={processing} style={{marginTop: 20}} onClick={handleSubmit}>
                 {processing ? "Adding Payment Method..." : "Add Payment Method"}
             </button>
+            
         </div>
     );
 }

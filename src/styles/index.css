@@ -49,6 +49,7 @@ code {
 }
 .error{
   font-size: smaller;
+  color: tomato;
 }
 .subPrice div{
   margin: 7px 0;

@@ -16,6 +16,9 @@ const stripe = require('stripe')(STRIPE_KEY);
 
 const data = require('./src/data/data.js');
 
+const sqlite3 = require('sqlite3');
+const { open } = require('sqlite');
+
 /* ------ USER DATA ------ */
 // Get customer data
 app.get('/customers/:email', async (req, res) => {
@@ -78,50 +81,24 @@ app.post("/customers", async (req, res) => {
     res.send(customer);
 });
 
-// Get all products
-app.get('/products', async (req, res) => {
-    let output = [];
-
-    const products = await stripe.products.list({
-        limit: 30,
-        active: true
-    });
-
-    const prices = await stripe.prices.list({
-        limit: 30,
-        active: true
-    });
-
-    products.data.forEach(product => {
-        product.prices = [];
-        prices.data.forEach(price => {
-            if (price.product === product.id) product.prices.push(price);
-        })
-        product.is_subscription = product.prices.findIndex(x => x.recurring !== null) > -1;
-        output.push(product);
-    });
-
-    res.send(output);
+/* ------ PRODUCT DATA ------ */
+// Get all invoices for the customer
+app.get('/invoices-imported', async (req, res) => {
+    const db = await open({
+        filename: 'invoices.db',
+        driver: sqlite3.Database
+    })
+    const sql = `select * from invoices`;
+    const invoices = await db.all(sql);
+    res.send(invoices);
 });
 
-// Get details and prices on a specific product
-app.get('/products/:id', async (req, res) => {
-    const id = req.params.id;
-    const product = await stripe.products.retrieve(id);
-    const prices = await stripe.prices.list({
-        product: req.params.id,
-        active: true,
-    });
-    product.prices = prices.data;
-    product.is_subscription = product.prices.findIndex(x => x.recurring !== null) > -1;
-    res.send({
-        product
-    });
-});
+
 
 /* ------ PAYMENT METHODS ------ */
 // Get saved cards for a given customer
 app.get('/payment-methods/:customer/cards', async (req, res) => {
+    //await sleep(1000);
     const customer = req.params.customer;
     const pms = await stripe.paymentMethods.list({
         customer: customer,
@@ -153,101 +130,21 @@ app.post('/setup-intents', async (req, res) => {
 })
 
 /* ------ PAYMENTS ------ */
-// Calculate the total amount server side to prevent fraud, and we collate a lit of products being bought, to put into the metadata
-const summarizeCart = async (cart) => {
-    const prices = await stripe.prices.list({
-        limit: 100
-    });
-    let hasSubs = false;
-    let total = 0;
-    let summary = '';
-    cart.forEach(item => {
-        if (item.selectedPrice.recurring !== null) hasSubs = true;
-        const price = prices.data.find(x => x.id === item.selectedPrice.id) || 0;
-        total += price.unit_amount;
-        summary += item.id + '  [' + item.name + "] "
-    });
-    return {
-        total: total,
-        summary: summary,
-        hasSubs: hasSubs
-    }
-}
-
-// Process the cart - depending on the contents, we might be starting a subscription, or a setting up a PI
-// The cart will only ever have ONE subscription product in it, at least for now, for simplicity
-// (adding multiple products at the same time is only possible if they are on the same recurring cycle)
-app.post("/process-cart", async (req, res) => {
-    const cart = req.body.cart;
+// Create payment intent for specific amount
+app.post('/payment-intents', async (req, res) => {
     const customer = req.body.customer;
-    const pm = req.body.pm || false;
-    const cartInfo = await summarizeCart(cart);
-    let payload = {};
-
-    if (cartInfo.hasSubs) {
-        const subPrice = cart.find(x => x.is_subscription).selectedPrice.id;
-        const items = cart.filter(x => !x.is_subscription).map(x => {
-            return { price: x.selectedPrice.id }
-        });
-        payload = {
-            customer: customer,
-            items: [
-                { price: subPrice }
-            ],
-            add_invoice_items: items,
-            automatic_tax: {
-                enabled: true
-            }
-        }
-        if (pm) {
-            payload.default_payment_method = pm
-        }
-        else {
-            payload.payment_behavior = 'default_incomplete',
-                payload.expand = ['latest_invoice.payment_intent']
-        }
-        const subscription = await stripe.subscriptions.create(payload);
-        res.send({
-            next_step: 'profile',
-            clientSecret: subscription.latest_invoice?.payment_intent?.client_secret || false
-        });
-        // to do
-    }
-    else {
-        payload = {
-            amount: cartInfo.total,
-            currency: 'usd',
-            metadata: {
-                summary: cartInfo.summary
-            },
-            customer: customer,
-            payment_method_types: ['card', 'us_bank_account', 'alipay']
-        };
-        if (pm) {
-            payload.confirm = true;
-            payload.payment_method = pm;
-        }
-
-        const paymentIntent = await stripe.paymentIntents.create(payload);
-
-        res.send({
-            clientSecret: paymentIntent.client_secret,
-            status: paymentIntent.status,
-            last_payment_error: paymentIntent.last_payment_error,
-            id: paymentIntent.id
-        });
-    }
-});
-
-// Update the PM on a sub
-app.post('/subscription-update/', async (req, res) => {
-    const id = req.body.subscription;
+    const amount = req.body.amount;
     const pm = req.body.pm;
-    const subscription = await stripe.subscriptions.update(
-        id,
-        { default_payment_method: pm }
-    )
-    res.send(subscription);
+    const metadata = req.body.metadata;
+    const intent = await stripe.paymentIntents.create({
+        customer: customer,
+        amount: amount * 100,
+        payment_method: pm,
+        confirm: true,
+        metadata: metadata,
+        currency: 'usd'
+    })
+    res.send(intent);
 });
 
 /* ------ REPORTING ------ */
@@ -261,20 +158,16 @@ app.get('/payments/:customer', async (req, res) => {
     res.send(payments.data);
 });
 
-// Get all subs for the customer
-app.get('/subscriptions/:customer', async (req, res) => {
-    const customer = req.params.customer;
-    const subscriptions = await stripe.subscriptions.list({
-        customer: customer,
-        status: 'all',
-        expand: ['data.default_payment_method', 'data.plan.product']
-    });
-    res.send(subscriptions.data);
-});
-
 // Get all invoices for the customer
 app.get('/invoices-imported', async (req, res) => {
-    res.send(data.invoices);
+    const db = await open({
+        filename: 'invoices.db',
+        driver: sqlite3.Database
+    })
+    const sql = `select * from invoices`;
+    const invoices = await db.all(sql);
+    await db.close();
+    res.send(invoices);
 });
 
 // Get all invoices for the customer
@@ -288,34 +181,6 @@ app.get('/invoices/:customer', async (req, res) => {
 });
 
 /* ------ STRIPE-HOSTED PAGES ------ */
-// Checkout
-app.post('/create-checkout-session', async (req, res) => {
-    const customer = req.body.customer;
-    const price = req.body.price;
-    const session = await stripe.checkout.sessions.create({
-        mode: 'subscription',
-        customer: customer,
-        payment_method_types: ['card', 'klarna'],
-        billing_address_collection: 'auto',
-        line_items: [
-            {
-                price: price,
-                quantity: 1
-            }
-        ],
-        automatic_tax: {
-            enabled: true
-        },
-        success_url: BASE_URL + '/profile',
-        cancel_url: BASE_URL,
-    });
-
-    res.send({
-        sessionId: session.id,
-    });
-
-});
-
 // Retrieving a session or a PI to display details on redirect from hosted checkout or from UPE
 app.get('/session/:id', async (req, res) => {
     const id = req.params.id;
@@ -353,16 +218,17 @@ app.post('/webhooks', async (req, res) => {
     const obj = event.data.object;
 
     switch (event.type) {
-        case 'invoice.payment_succeeded':
+        case 'payment_intent.succeeded':
             res.sendStatus(200);
-            if (obj.billing_reason === 'subscription_create') {
-                const paymentIntentId = obj.payment_intent;
-                const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-                const sub = await stripe.subscriptions.update(
-                    obj.subscription,
-                    { default_payment_method: paymentIntent.payment_method }
-                )
-            }
+            const invoices = obj.metadata.invoices.split(", ");
+            const db = await open({
+                filename: 'invoices.db',
+                driver: sqlite3.Database
+            })
+            const sql = `update invoices set status = 'paid' where number in ('` + invoices.join("','") + `')`;
+            console.log(sql);
+            await db.run(sql);
+            await db.close();
             break;
 
         default:
@@ -370,6 +236,12 @@ app.post('/webhooks', async (req, res) => {
             break;
     }
 });
+
+function sleep(ms) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
 
 app.get('/*', function (req, res) {
     res.sendFile(path.join(__dirname, 'build', 'index.html'));

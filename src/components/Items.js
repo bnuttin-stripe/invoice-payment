@@ -3,13 +3,15 @@ import Table from 'react-bootstrap/Table';
 import * as Utils from '../actions/utilities';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import PaymentBar from './PaymentBar';
 
 export default function Items(props) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [refreshInvoices, setRefreshInvoices] = useState();
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
+  const [metadata, setMetadata] = useState([]);
 
   // Load one-time items
   useEffect(() => {
@@ -23,15 +25,20 @@ export default function Items(props) {
         setItems(data);
         setIsLoaded(true);
       });
-  }, []);
+  }, [refreshInvoices]);
 
   // Calculate total amount due based on selected items
   useEffect(() => {
+    var metadata = [];
     var total = 0;
     items.map(item => {
-      if (item.selected) total += item.total;
+      if (item.selected) {
+        total += item.amount;
+        metadata.push(item.number);
+      }
     })
     setTotal(total);
+    setMetadata(metadata);
   }, [items]);
 
   const handleItemChange = (e) => {
@@ -81,6 +88,7 @@ export default function Items(props) {
                       id={item.number}
                       value={false}
                       onChange={handleItemChange}
+                      disabled={item.status === 'paid'}
                     />
                   </td>
                   <td style={{ whiteSpace: 'nowrap' }}><a href={item.url} target='_blank' rel="noreferrer">{item.number}</a></td>
@@ -92,8 +100,8 @@ export default function Items(props) {
                     {item.status === 'void' && <span className="badge badge-silver">Void</span>}
                   </td>
                   <td>{item.description}</td>
-                  <td>{Utils.displayDate(item.created)}</td>
-                  <td style={{ textAlign: 'right' }}>{Utils.displayPrice(item.total, 'usd')}</td>
+                  <td>{Utils.displayDate(item.date)}</td>
+                  <td >{Utils.displayPrice(item.amount, 'usd')}</td>
                 </tr>
               ))}
             </tbody>
@@ -102,6 +110,8 @@ export default function Items(props) {
           <PaymentBar
             customer={props.token.id}
             total={total}
+            metadata={metadata}
+            setRefreshInvoices={setRefreshInvoices}
           />
 
         </div>

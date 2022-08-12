@@ -21,6 +21,7 @@ export default function Header(props) {
                     </Link>
                 </div>
                 {typeof props.setToken === 'function' && <div className="col-6" style={{ textAlign: 'right' }}>
+                    {/*
                     <Link className="profile" to='/checkout'>
                         <FontAwesomeIcon icon={faShoppingCart} className="faIcon" />
                     </Link>
@@ -29,6 +30,7 @@ export default function Header(props) {
                         <FontAwesomeIcon icon={faUserCircle} className="faIcon" />
                         <span style={{ marginLeft: 10 }}>{props.token.email}</span>
                     </Link>
+    */}
                     <FontAwesomeIcon icon={faSignOutAlt} onClick={logout} className="faIcon" />
                 </div>}
             </div>
