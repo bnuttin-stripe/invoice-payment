@@ -7,7 +7,7 @@ import './styles/index.css';
 import Header from './components/Header';
 import Login from './components/Login';
 import Register from './components/Register';
-import Profile from './components/Profile';
+import Option1 from './components/Option1';
 
 // Actions
 import useToken from './actions/useToken';
@@ -52,24 +52,12 @@ export default function App() {
             <BrowserRouter>
                 <Header setToken={setToken} token={token} cart={cart} resetCart={resetCart} />
                 <Routes>
-                    {/*
-                    <Route path="/checkout">
-                        <Checkout token={token} cart={cart} resetCart={resetCart} />
+                    <Route path="/option-1" element={
+                        <Option1 token={token} />
+                    }>
                     </Route>
-                    <Route path="/receipt">
-                        <Receipt token={token} />
-                    </Route>
-                    */}
-                    <Route path="/profile">
-
-                    </Route>
-                    {/*
-                    <Route path="/product/:id">
-                        <ProductPage token={token} addToCart={addToCart} cart={cart} />
-                    </Route>
-                    */}
                     <Route path="/" element={
-                        <Profile token={token} />
+                        <Option1 token={token} />
                     }>
                     </Route>
                 </Routes>
@@ -77,3 +65,15 @@ export default function App() {
         );
     }
 }
+
+/*
+Option 0 - Hosted surfaces
+           Pros: very little front-end code needed
+           Cons: can only pay one invoice at a time, cannot save payment methods, heavy lift to sync invoices, clunky UX
+
+Option 1 - Portal that shows invoices from a separate system, multiple invoices can be paid at once
+           Pros: multiple invoices can be paid at once, invoice PDFs can be those from Morningstar's system
+           Cons: engineering lift
+           
+*/
+

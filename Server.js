@@ -180,6 +180,16 @@ app.get('/invoices/:customer', async (req, res) => {
     res.send(invoices.data);
 });
 
+// Get past payments for the customer
+app.get('/payments/:customer', async (req, res) => {
+    const customer = req.params.customer;
+    const paymentIntents = await stripe.paymentIntents.list({
+        customer: customer,
+        //expand: ['data.charge', 'data.payment_intent', 'data.payment_intent.payment_method']
+    });
+    res.send(paymentIntents.data);
+});
+
 /* ------ STRIPE-HOSTED PAGES ------ */
 // Retrieving a session or a PI to display details on redirect from hosted checkout or from UPE
 app.get('/session/:id', async (req, res) => {

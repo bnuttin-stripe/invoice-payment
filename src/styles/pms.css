@@ -1,36 +1,8 @@
-.pmmini {
-    height: 20px;
-    min-width: 180px;
-    white-space: nowrap;
-    float:left
+.pm-wrapper{
+    height: 22px;
+    min-width: 200px;
 }
-.pm div {
-    float: left;
-    margin-right: 10px
-}
-.pmmini div {
-    float: left;
-    margin-right: 15px
-}
-
-.pm img, .pmmini img{
+.pm-wrapper img{
     max-width: 28px;
     max-height: 28px;
-}
-.pm-select{
-    float:left;
-    min-width: 320px;
-    margin-right:20px;
-}
-.pm-select img{
-    max-width: 28px;
-    max-height: 28px;
-}
-.pm .icon, .pmmini .icon{
-    width: 30px;
-    text-align: center;
-}
-.icon{
-    width: 30px;
-    height: 30px;
 }

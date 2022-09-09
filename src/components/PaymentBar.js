@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import * as Utils from '../actions/utilities';
 
+import Card from './Card';
 import TestCards from './TestCards';
 
 import { loadStripe } from '@stripe/stripe-js';
@@ -9,15 +10,6 @@ import { Elements } from "@stripe/react-stripe-js";
 
 import Modal from 'react-bootstrap/Modal';
 import SetupWrapper from './SetupWrapper';
-
-import Amex from '../img/pms/amex.png';
-import Diners from '../img/pms/diners.png';
-import Discover from '../img/pms/discover.png';
-import JCB from '../img/pms/jcb.png';
-import Mastercard from '../img/pms/mastercard.png';
-import UnionPay from '../img/pms/unionpay.png';
-import Visa from '../img/pms/visa.png';
-import '../styles/pms.css';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner, faTimes, faPlus, faCircleCheck, faDollarSign } from '@fortawesome/free-solid-svg-icons';
@@ -137,26 +129,25 @@ export default function PaymentBar(props) {
         <>
             <div className="row mb-3">
                 <div className="col d-flex flex-row-reverse mr-5">
-                    {paymentIntent?.status !== 'succeeded' && 
-                    <button className="btn btn-primary" disabled={isLoaded && (props.total == 0 || selectedPM?.id === undefined || selectedPM?.id === 'new')} onClick={pay}>
-                        {paymentProcessing && <FontAwesomeIcon icon={faSpinner} className="spinner"/>}
-                        {!paymentProcessing && <FontAwesomeIcon icon={faDollarSign} />}
-                        <span style={{paddingLeft:10}}>Pay {Utils.displayPrice(props.total, 'usd')}</span>
-                    </button>}
+                    {paymentIntent?.status !== 'succeeded' &&
+                        <button className="btn btn-primary" style={{marginLeft:30}} disabled={isLoaded && (props.total == 0 || selectedPM?.id === undefined || selectedPM?.id === 'new')} onClick={pay}>
+                            {paymentProcessing && <FontAwesomeIcon icon={faSpinner} className="spinner" />}
+                            {!paymentProcessing && <FontAwesomeIcon icon={faDollarSign} />}
+                            <span style={{ paddingLeft: 10 }}>Pay {Utils.displayPrice(props.total, 'usd')}</span>
+                        </button>}
 
                     {paymentIntent?.status === 'succeeded' &&
                         <>
                             <button className="btn btn-secondary" onClick={resetAndRefresh}>
                                 <FontAwesomeIcon icon={faCircleCheck} />
-                                <span style={{paddingLeft:10}}>Payment Successful</span>
+                                <span style={{ paddingLeft: 10 }}>Payment Successful</span>
                             </button>
                         </>
                     }
 
                     {paymentIntent?.status !== 'succeeded' && <Select
-                        placeholder={!isLoaded ? "Retrieving saved cards..." : "Select card"}
+                        placeholder={!isLoaded ? "Retrieving saved cards..." : <div style={{width:220}}>Select card</div>}
                         isDisabled={!isLoaded}
-                        className='pm-select'
                         value={selectedPM}
                         onChange={handlePMChange}
                         options={pms}
@@ -164,16 +155,7 @@ export default function PaymentBar(props) {
                         formatOptionLabel={pm => {
                             if (pm.id != 'new') {
                                 return (
-                                    <div >
-                                        {pm.card.brand === 'amex' && <img src={Amex} alt="logo" />}
-                                        {pm.card.brand === 'diners' && <img src={Diners} alt="logo" />}
-                                        {pm.card.brand === 'discover' && <img src={Discover} alt="logo" />}
-                                        {pm.card.brand === 'jcb' && <img src={JCB} alt="logo" />}
-                                        {pm.card.brand === 'mastercard' && <img src={Mastercard} alt="logo" />}
-                                        {pm.card.brand === 'unionpay' && <img src={UnionPay} alt="logo" />}
-                                        {pm.card.brand === 'visa' && <img src={Visa} alt="logo" />}
-                                        <span style={{ paddingLeft: 20 }}>Exp. {pm.card.exp_month}/{pm.card.exp_year} ending in {pm.card.last4}</span>
-                                    </div>
+                                    <Card card={pm.card} />
                                 )
                             }
                             if (pm.id == 'new') {
@@ -187,8 +169,6 @@ export default function PaymentBar(props) {
 
                         }}
                     />}
-
-
 
                     {!isLoaded && <FontAwesomeIcon icon={faSpinner} className="spinner" style={{ padding: 10 }} />}
                 </div>

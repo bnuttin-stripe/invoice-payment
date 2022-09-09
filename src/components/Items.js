@@ -101,7 +101,7 @@ export default function Items(props) {
                   </td>
                   <td>{item.description}</td>
                   <td>{Utils.displayDate(item.date)}</td>
-                  <td >{Utils.displayPrice(item.amount, 'usd')}</td>
+                  <td>{Utils.displayPrice(item.amount, 'usd')}</td>
                 </tr>
               ))}
             </tbody>

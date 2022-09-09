@@ -12,7 +12,7 @@ export default function Items(props) {
                         <Image src={StephaniePike} style={{border: '2px solid silver'}} roundedCircle fluid />
                     </div>
                     <div className="col-9">
-                        <h4>Stephanie Pike</h4>
+                        <h5>Stephanie Pike</h5>
                         <h6>Account Executive</h6>
                         <div>stephanie.pike@morningstar.com</div>
                     </div>
@@ -22,7 +22,7 @@ export default function Items(props) {
                         <Image src={JohnSmith} style={{border: '2px solid silver'}} roundedCircle fluid />
                     </div>
                     <div className="col-9">
-                        <h4>John Smith</h4>
+                        <h5>John Smith</h5>
                         <h6>Technical Account Manager</h6>
                         <div>john.smith@morningstar.com</div>
                     </div>

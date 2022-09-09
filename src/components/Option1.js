@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
-import Wallet from './Wallet';
-//import Payments from './Payments';
+import Payments from './Payments';
 import Items from './Items';
 import Team from './Team';
 import Products from './Products';
-import Invoices from './Invoices';
-//import Subscriptions from './Subscriptions';
 
-export default function Profile(props) {
+export default function Option1(props) {
 
     return (
         <>
@@ -27,7 +24,7 @@ export default function Profile(props) {
                         <Items token={props.token} />
                     </div>
                     <div className="row">
-                        <Invoices token={props.token} />
+                        <Payments token={props.token} />
                     </div>
                 </div>
             </div>
