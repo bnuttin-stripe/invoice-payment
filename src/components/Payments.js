@@ -14,11 +14,10 @@ export default function Payments(props) {
     fetch('/payments/' + props.token.id)
       .then(res => res.json())
       .then(obj => {
-        console.log(obj);
         setPayments(obj);
         setIsLoaded(true);
       });
-  }, []);
+  }, [props.refresh]);
 
   return (
     <>

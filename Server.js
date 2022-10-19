@@ -190,6 +190,17 @@ app.get('/payments/:customer', async (req, res) => {
     res.send(paymentIntents.data);
 });
 
+// Generate test data
+app.post('/test/data', async (req, res) => {
+    const db = await open({
+        filename: 'invoices.db',
+        driver: sqlite3.Database
+    })
+    const sql = `select * from invoices`;
+    const invoices = await db.all(sql);
+    await db.close();
+});
+
 /* ------ STRIPE-HOSTED PAGES ------ */
 // Retrieving a session or a PI to display details on redirect from hosted checkout or from UPE
 app.get('/session/:id', async (req, res) => {

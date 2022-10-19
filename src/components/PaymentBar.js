@@ -121,8 +121,9 @@ export default function PaymentBar(props) {
     }
 
     const resetAndRefresh = () => {
+        setSelectedPM(null);
         setPaymentIntent({});
-        props.setRefreshInvoices(Math.random())
+        props.setRefresh(Math.random())
     }
 
     return (
@@ -140,7 +141,7 @@ export default function PaymentBar(props) {
                         <>
                             <button className="btn btn-secondary" onClick={resetAndRefresh}>
                                 <FontAwesomeIcon icon={faCircleCheck} />
-                                <span style={{ paddingLeft: 10 }}>Payment Successful</span>
+                                <span style={{ paddingLeft: 10 }}>Payment Successful - click to refresh</span>
                             </button>
                         </>
                     }

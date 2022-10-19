@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import Table from 'react-bootstrap/Table';
 import * as Utils from '../actions/utilities';
+import Pdf from '../data/Invoice.pdf';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faSpinner, faMagic, faReceipt } from '@fortawesome/free-solid-svg-icons';
 import PaymentBar from './PaymentBar';
 
 export default function Items(props) {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [refreshInvoices, setRefreshInvoices] = useState();
+  const [isSampleDataLoaded, setIsSampleDataLoaded] = useState(false);
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [metadata, setMetadata] = useState([]);
@@ -25,7 +26,7 @@ export default function Items(props) {
         setItems(data);
         setIsLoaded(true);
       });
-  }, [refreshInvoices]);
+  }, [props.refresh]);
 
   // Calculate total amount due based on selected items
   useEffect(() => {
@@ -40,6 +41,10 @@ export default function Items(props) {
     setTotal(total);
     setMetadata(metadata);
   }, [items]);
+
+  const loadSampleData = () => {
+    console.log("hello")
+  }
 
   const handleItemChange = (e) => {
     const index = items.findIndex(x => x.number === e.target.id);
@@ -57,9 +62,9 @@ export default function Items(props) {
   return (
     <>
       <div className="row">
-        <h4 className="mb-4">Your invoices</h4>
+        <h4 className="mb-4" style={{ float: 'left', display: 'inline' }}>Your invoices</h4>
       </div>
-      <div className="row">
+      <div className="row ">
         <div className="shadowTable">
           <Table borderless >
             <thead >
@@ -70,6 +75,7 @@ export default function Items(props) {
                 <th>Description</th>
                 <th>Date</th>
                 <th>Amount</th>
+                <th style={{ textAlign: 'center' }}>PDF</th>
               </tr>
             </thead>
             <tbody>
@@ -102,6 +108,11 @@ export default function Items(props) {
                   <td>{item.description}</td>
                   <td>{Utils.displayDate(item.date)}</td>
                   <td>{Utils.displayPrice(item.amount, 'usd')}</td>
+                  <td style={{ textAlign: 'center' }}>
+                    <a href={Pdf} target='_blank' rel="noreferrer">
+                      <FontAwesomeIcon icon={faReceipt} />
+                    </a>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -111,9 +122,8 @@ export default function Items(props) {
             customer={props.token.id}
             total={total}
             metadata={metadata}
-            setRefreshInvoices={setRefreshInvoices}
+            setRefresh={props.setRefresh}
           />
-
         </div>
       </div>
     </>

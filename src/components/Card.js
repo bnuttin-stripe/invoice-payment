@@ -12,7 +12,7 @@ export default function Card(props) {
     const styles = {
         wrapper: {
             height: 22,
-            minWidth: 200,
+            minWidth: 240,
         },
         logo: {
             maxWidth: 28,
