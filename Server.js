@@ -117,6 +117,16 @@ app.get('/payment-methods/:customer/bankaccounts', async (req, res) => {
     res.send(pms.data);
 });
 
+// Get saved PMs for a given customer
+app.get('/payment-methods/:customer', async (req, res) => {
+    //await sleep(1000);
+    const customer = req.params.customer;
+    const pms = await stripe.paymentMethods.list({
+        customer: customer
+    });
+    res.send(pms.data);
+});
+
 // Create a setup intent and return its secret
 app.post('/setup-intents', async (req, res) => {
     const customer = req.body.customer;
@@ -142,7 +152,8 @@ app.post('/payment-intents', async (req, res) => {
         payment_method: pm,
         confirm: true,
         metadata: metadata,
-        currency: 'usd'
+        currency: 'usd',
+        payment_method_types: ['card', 'us_bank_account']
     })
     res.send(intent);
 });
@@ -153,7 +164,7 @@ app.get('/payments/:customer', async (req, res) => {
     const customer = req.params.customer;
     const payments = await stripe.paymentIntents.list({
         customer: customer,
-        expand: ['data.payment_method', 'data.invoice']
+        expand: ['data.payment_method', 'data.latest_charge']
     });
     res.send(payments.data);
 });
@@ -180,25 +191,19 @@ app.get('/invoices/:customer', async (req, res) => {
     res.send(invoices.data);
 });
 
-// Get past payments for the customer
-app.get('/payments/:customer', async (req, res) => {
-    const customer = req.params.customer;
-    const paymentIntents = await stripe.paymentIntents.list({
-        customer: customer,
-        //expand: ['data.charge', 'data.payment_intent', 'data.payment_intent.payment_method']
-    });
-    res.send(paymentIntents.data);
-});
-
 // Generate test data
-app.post('/test/data', async (req, res) => {
+app.post('/test/refresh', async (req, res) => {
     const db = await open({
         filename: 'invoices.db',
         driver: sqlite3.Database
     })
-    const sql = `select * from invoices`;
-    const invoices = await db.all(sql);
+    await db.all(`delete from invoices`);
+    await db.all(`insert into invoices values 
+    ("INV_11111", "open", "Services ABC", 1680798648, 100),
+    ("INV_11112", "open", "Services DEF", 1680798648, 75),
+    ("INV_11113", "open", "Services GHI", 1680798648, 200)`);
     await db.close();
+    res.sendStatus(200);
 });
 
 /* ------ STRIPE-HOSTED PAGES ------ */

@@ -14,7 +14,7 @@ export default function Items(props) {
                     <div className="col-9">
                         <h5>Stephanie Pike</h5>
                         <h6>Account Executive</h6>
-                        <div>stephanie.pike@morningstar.com</div>
+                        <div>stephanie.pike@example.com</div>
                     </div>
                 </div>
                 <div className="row mt-4">
@@ -24,7 +24,7 @@ export default function Items(props) {
                     <div className="col-9">
                         <h5>John Smith</h5>
                         <h6>Technical Account Manager</h6>
-                        <div>john.smith@morningstar.com</div>
+                        <div>john.smith@example.com</div>
                     </div>
                 </div>
             </div>

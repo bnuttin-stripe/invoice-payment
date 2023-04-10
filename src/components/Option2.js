@@ -11,7 +11,7 @@ export default function Option1(props) {
         <>
             <div className="row m-4">
                 <div className="col-4">
-                    <h4 className="mb-4">Your Morningstar team</h4>
+                    <h4 className="mb-4">Your Client team</h4>
                     <div className="row">
                         <Team />
                     </div>

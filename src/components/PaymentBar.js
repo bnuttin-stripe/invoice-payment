@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import * as Utils from '../actions/utilities';
 
-import Card from './Card';
+import PaymentMethod from './PaymentMethod';
 import TestCards from './TestCards';
 
 import { loadStripe } from '@stripe/stripe-js';
@@ -35,7 +35,8 @@ export default function PaymentBar(props) {
     useEffect(() => {
         setPaymentIntent({});
         setIsLoaded(false);
-        fetch('/payment-methods/' + props.customer + '/cards')
+        //fetch('/payment-methods/' + props.customer + '/cards')
+        fetch('/payment-methods/' + props.customer)
             .then(res => res.json())
             .then(data => {
                 data.push({
@@ -51,7 +52,7 @@ export default function PaymentBar(props) {
         setSelectedPM(pms.find(x => x.id === newlyCreatedPM));
     }, [pms, newlyCreatedPM]);
 
-    // Action when customer has selected a card
+    // Action when customer has selected a PM
     const handlePMChange = (e) => {
         if (e.id === 'new') {
             setSelectedPM(null);
@@ -156,14 +157,14 @@ export default function PaymentBar(props) {
                         formatOptionLabel={pm => {
                             if (pm.id != 'new') {
                                 return (
-                                    <Card card={pm.card} />
+                                    <PaymentMethod pm={pm} />
                                 )
                             }
                             if (pm.id == 'new') {
                                 return (
                                     <div >
                                         <FontAwesomeIcon icon={faPlus} style={{ paddingLeft: 5, paddingRight: 5 }} />
-                                        <span style={{ paddingLeft: 24 }}>Add a card</span>
+                                        <span style={{ paddingLeft: 24 }}>Add a payment method</span>
                                     </div>
                                 )
                             }
