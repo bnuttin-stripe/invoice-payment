@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Table from 'react-bootstrap/Table';
-import Card from './Card';
+import PaymentMethod from './PaymentMethod';
 import * as Utils from '../actions/utilities';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner, faReceipt } from '@fortawesome/free-solid-svg-icons';
@@ -50,7 +50,9 @@ export default function Payments(props) {
                   <td>{Utils.displayDate(payment.created)}</td>
                   <td>For invoices {payment.metadata?.invoices}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>
-                    <Card card={payment.charges.data[0].payment_method_details?.card} />
+                    {/*
+                    payment.latest_charge?.payment_method_details?.card && <PaymentMethod pm={payment.latest_charge?.payment_method_details?.card} />
+              */}
                   </td>
                   <td>
                     {payment.status === 'canceled' && <span className="badge badge-silver">Canceled</span>}
@@ -62,7 +64,7 @@ export default function Payments(props) {
                   </td>
                   <td >{Utils.displayPrice(payment.amount / 100, 'usd')}</td>
                   <td style={{ textAlign: 'center' }}>
-                    <a href={payment.charges.data[0]?.receipt_url} target='_blank' rel="noreferrer">
+                    <a href={payment.latest_charge?.receipt_url} target='_blank' rel="noreferrer">
                       <FontAwesomeIcon icon={faReceipt} />
                     </a>
                   </td>
