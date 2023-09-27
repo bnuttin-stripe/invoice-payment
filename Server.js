@@ -164,7 +164,7 @@ app.get('/payments/:customer', async (req, res) => {
     const customer = req.params.customer;
     const payments = await stripe.paymentIntents.list({
         customer: customer,
-        expand: ['data.payment_method', 'data.latest_charge']
+        expand: ['data.payment_method', 'data.latest_charge', 'data.latest_charge.payment_method_details']
     });
     res.send(payments.data);
 });

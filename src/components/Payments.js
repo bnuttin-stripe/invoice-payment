@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Table from 'react-bootstrap/Table';
-import PaymentMethod from './PaymentMethod';
+import PMSimple from './PaymentMethod';
 import * as Utils from '../actions/utilities';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner, faReceipt } from '@fortawesome/free-solid-svg-icons';
@@ -14,6 +14,7 @@ export default function Payments(props) {
     fetch('/payments/' + props.token.id)
       .then(res => res.json())
       .then(obj => {
+        console.log(obj)
         setPayments(obj);
         setIsLoaded(true);
       });
@@ -50,9 +51,9 @@ export default function Payments(props) {
                   <td>{Utils.displayDate(payment.created)}</td>
                   <td>For invoices {payment.metadata?.invoices}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>
-                    {/*
-                    payment.latest_charge?.payment_method_details?.card && <PaymentMethod pm={payment.latest_charge?.payment_method_details?.card} />
-              */}
+                    {
+                    payment.latest_charge.payment_method_details && <PMSimple pm={payment.latest_charge.payment_method_details} />
+              }
                   </td>
                   <td>
                     {payment.status === 'canceled' && <span className="badge badge-silver">Canceled</span>}
